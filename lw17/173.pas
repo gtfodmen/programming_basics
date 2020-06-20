@@ -1,90 +1,133 @@
-PROGRAM Stat(INPUT, OUTPUT);
+﻿PROGRAM Stat(INPUT, OUTPUT);
+{Для файла целых чисел, определяет минимальное, максимальное и среднее арифметическое}
 VAR
-  Min, Max, Sum, Average, Temp, CountDigit: INTEGER;
-  Overflow: BOOLEAN;
-PROCEDURE ReadDigit(VAR InF: TEXT; VAR Digit: INTEGER);
+  Int, Min, Max, Ave, Remains, Sum, NumberCount, MAXINT: INTEGER;
+  OVERFLOW: BOOLEAN;
+PROCEDURE ReadNumber(VAR F: TEXT; VAR Sum: INTEGER);
+{Преобразует строку цифр из файла до первого нецифрового символа
+ в соответствующее целое число N}
 VAR
-  Ch: CHAR;
-BEGIN{ReadDigit}
-  READ(InF, Ch);
-  Digit := -1;
-  IF (Ch = '0') THEN Digit := 0 ELSE
-  IF (Ch = '1') THEN Digit := 1 ELSE
-  IF (Ch = '2') THEN Digit := 2 ELSE
-  IF (Ch = '3') THEN Digit := 3 ELSE
-  IF (Ch = '4') THEN Digit := 4 ELSE
-  IF (Ch = '5') THEN Digit := 5 ELSE
-  IF (Ch = '6') THEN Digit := 6 ELSE
-  IF (Ch = '7') THEN Digit := 7 ELSE
-  IF (Ch = '8') THEN Digit := 8 ELSE
-  IF (Ch = '9') THEN Digit := 9
-END;{ReadDigit}
-PROCEDURE ReadNumber(VAR InF: TEXT; VAR Number: INTEGER);
+  D, Count: INTEGER;
+PROCEDURE ReadDigit(VAR F: TEXT; VAR D: INTEGER);
+{Считывает текущй символ из файла, если он - цифра, возвращает его
+ преобразуя в значение типа INEGER. Если считанный символ не цифра
+ возвращает -1}
 VAR
   Ch: CHAR;
-  TemporaryDigit: INTEGER; 
-BEGIN{ReadNumber}
-  Number := 0; 
-  WHILE (NOT EOLN) AND (TemporaryDigit <> -1) AND (Number <> -1)
+BEGIN {ReadDigit}
+  IF NOT EOLN(F)
+  THEN
+    BEGIN
+      READ(F, Ch);
+      IF Ch = '0' THEN D := 0 ELSE
+      IF Ch = '1' THEN D := 1 ELSE
+      IF Ch = '2' THEN D := 2 ELSE
+      IF Ch = '3' THEN D := 3 ELSE
+      IF Ch = '4' THEN D := 4 ELSE
+      IF Ch = '5' THEN D := 5 ELSE
+      IF Ch = '6' THEN D := 6 ELSE
+      IF Ch = '7' THEN D := 7 ELSE
+      IF Ch = '8' THEN D := 8 ELSE
+      IF Ch = '9' THEN D := 9  
+      ELSE   {Считанный символ не цифра}
+        D := -1
+    END
+  ELSE
+    D := -1
+END; {ReadDigit}
+BEGIN {ReadNumber}
+  Count := 0;
+  MAXINT := 32767;
+  D := 0;
+  Sum := 0;
+  OVERFLOW := FALSE;
+  WHILE (D <> -1) AND (NOT OVERFLOW)  
   DO
     BEGIN
-      ReadDigit(InF, TemporaryDigit);
-      IF TemporaryDigit <> -1 
+      ReadDigit(F, D);
+      Count := Count + 1;
+      IF D <> -1
       THEN
-        IF (Number < MAXINT DIV 10)
+        IF Count <= 4
         THEN
-          Number := (Number * 10) + TemporaryDigit
+          Sum := Sum * 10 + D
         ELSE
-          IF (TemporaryDigit <= MAXINT MOD 10) AND (Number = MAXINT DIV 10)
-          THEN
-            Number := (Number * 10) + TemporaryDigit
-          ELSE
-            Number := -1
-    END; 
-END;{ReadNumber}  
-BEGIN{Stat}
+          BEGIN
+            IF (Sum <= 3276) AND (D <= 7)
+            THEN
+              Sum := Sum * 10 + D
+            ELSE
+              BEGIN
+                OVERFLOW := TRUE;
+                Sum := -1
+              END
+          END
+    END
+END; {ReadNumber}
+BEGIN {Stat}
+  Int := 0;
+  Min := 0;
+  Max := 0;
+  Ave := 0;
+  Sum := 0;
+  MAXINT := 32767;
+  OVERFLOW := FALSE;
   IF NOT EOLN
   THEN
+    ReadNumber(INPUT, Min);
+  IF (NOT EOLN) AND (NOT OVERFLOW)
+  THEN
     BEGIN
-      ReadNumber(INPUT, Min);
-      Max := Min;
-      Sum := Min;
-      Average := Min;
-      CountDigit := 1
+      ReadNumber(INPUT, Int);
+      IF Int < Min
+      THEN
+        BEGIN
+          Max := Min;
+          Min := Int
+        END
+      ELSE
+        Max := Int;
+      IF Min <= MAXINT - Max
+      THEN
+        Sum := Min + Max
+      ELSE
+        OVERFLOW := TRUE;
+      NumberCount := 2
     END;
-  WHILE NOT EOLN
+  WHILE (NOT EOLN) AND (NOT OVERFLOW)
   DO
     BEGIN
-      ReadNumber(INPUT, Temp);
-      CountDigit := CountDigit + 1;
-      IF NOT Overflow
+      ReadNumber(INPUT, Int);
+      IF Int < Min
       THEN
-        IF (MAXINT - Temp) > Sum
-        THEN
-          Sum := Sum + Temp
-        ELSE
-          Overflow := TRUE;         
-      IF Temp < Min
-      THEN
-        Min := Temp;
-      IF Temp > Max
-      THEN
-        Max := Temp   
-    END;
-  WRITELN('Min=', Min, '.00');
-  WRITELN('Max=', Max, '.00');
-  IF Overflow
-  THEN
-    WRITELN('������� �������������� �� ����������, ��������� ������������')
-  ELSE
-    BEGIN
-      Average := Sum DIV CountDigit; 
-      WRITE('Average=', Average);
-      Average := Sum MOD CountDigit;
-      IF Average > 9
-      THEN
-        WRITELN('.', Average)
+        Min := Int
       ELSE
-        WRITELN('.', Average, '0')
+        IF Int > Max
+        THEN
+          Max := Int;
+      IF (Int <= MAXINT - Sum)
+      THEN
+        Sum := Sum + Int
+      ELSE
+        OVERFLOW := TRUE;
+      NumberCount := NumberCount + 1;
+    END;  
+  IF NOT OVERFLOW
+  THEN
+    BEGIN
+      Ave := Sum DIV NumberCount;
+      WRITELN('Minimum: ', Min);
+      WRITELN('Maximum: ', Max);
+      WRITE('Avarage: ');
+      IF Sum MOD NumberCount > 0
+      THEN
+        BEGIN
+          Remains := Sum MOD NumberCount * 10;
+          WRITELN(Ave, '.', Remains DIV NumberCount, Remains MOD NumberCount * 10 DIV NumberCount)
+        END
+      ELSE
+        WRITELN(Ave)
     END
-END.{Stat}
+  ELSE
+    WRITELN('OVERFLOW')
+END. {Stat}

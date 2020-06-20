@@ -1,94 +1,62 @@
-PROGRAM AverageScore(INPUT, OUTPUT);
+﻿PROGRAM AverageScore2(INPUT, OUTPUT);
 CONST
   NumberOfScores = 4;
   ClassSize = 4;
-TYPE
-  Score = 0 .. 100;
+  MinScore = 0;
+  MaxScore = 100;
 VAR
-  WhichScore: 0 .. NumberOfScores;
-  Student: 0 .. ClassSize;
-  Ave, TotalScore, ClassTotal, NextScore: INTEGER;
-  Overflow: BOOLEAN;
-  Name: TEXT;
-PROCEDURE ReadName(VAR InputFile, OutputFile: TEXT);
-VAR
+  Student, WhichScore, Ave, TotalScore, ClassTotal, NextScore: INTEGER;
   Ch: CHAR;
-BEGIN { ReadName }
-  IF NOT EOLN
-  THEN
-    BEGIN
-      READ(InputFile, Ch);
-      WRITE(OutputFile, Ch)
-    END;
-  WHILE (NOT EOLN(InputFile)) AND (Ch <> ' ')
-  DO
-    BEGIN
-      READ(InputFile, Ch);
-      WRITE(OutputFile, Ch)
-    END;
-  WRITELN(OutputFile)
-END; { ReadName }
-PROCEDURE WriteName(VAR InputFile, OutputFile: TEXT);
-VAR
-  Ch: CHAR;
-BEGIN { WriteName }
-  WHILE NOT EOLN(InputFile)
-  DO
-    BEGIN
-      READ(InputFile, Ch);
-      WRITE(OutputFile, Ch)
-    END
-END; { WriteName }
-BEGIN {AverageScore}
+  OVERFLOW: BOOLEAN;
+BEGIN {AverageScore2}
   ClassTotal := 0;
   WRITELN('Student averages:');
-  Student := 0;
-  Overflow := FALSE;
-  WHILE (Student < ClassSize) AND (NOT Overflow)
+  Student := 1;
+  WHILE Student <= ClassSize
   DO 
     BEGIN
+      OVERFLOW := FALSE;
       TotalScore := 0;
-      WhichScore := 0;
-      Student := Student + 1;
-      WRITE('Student ', Student, ': ');
-      REWRITE(Name);
-      ReadName(INPUT, Name);
-      WHILE (WhichScore < NumberOfScores) AND (NOT Overflow)
+      WhichScore := 1;
+      Ch := '#';
+      WHILE (Ch <> ' ') AND (NOT EOLN)
       DO
         BEGIN
-          READ(NextScore);
-          Overflow := (NextScore < 0) OR (NextScore > 100);
-          IF NOT Overflow
+          READ(Ch);
+          WRITE(Ch)
+        END;
+      WHILE (WhichScore <= NumberOfScores) AND (NOT EOLN) AND (NOT OVERFLOW)
+      DO
+        BEGIN
+          READ(NextScore);   
+          IF (NextScore >= MinScore) AND (NextScore <= MaxScore)
           THEN
             BEGIN
               TotalScore := TotalScore + NextScore;
               WhichScore := WhichScore + 1
             END
+          ELSE
+            OVERFLOW := TRUE
         END;
       READLN;
-      IF NOT Overflow
+      IF NOT OVERFLOW
       THEN
         BEGIN
           TotalScore := TotalScore * 10;
           Ave := TotalScore DIV NumberOfScores;
-          RESET(Name);
-          WriteName(Name, OUTPUT);
           IF Ave MOD 10 >= 5
           THEN
             WRITELN(Ave DIV 10 + 1)
           ELSE
             WRITELN(Ave DIV 10);
-          ClassTotal := ClassTotal + TotalScore
-        END;
+          ClassTotal := ClassTotal + TotalScore;
+          Student := Student + 1
+        END
+      ELSE
+        WRITELN('неверное значение баллов, введите ещё раз')
     END;
   WRITELN;
-  IF Overflow
-  THEN
-    WRITELN('Incorrect input data')
-  ELSE
-    BEGIN
-      WRITELN ('Class average:');
-      ClassTotal := ClassTotal DIV (ClassSize *NumberOfScores);
-      WRITELN(ClassTotal DIV 10, '.', ClassTotal MOD 10:1)
-    END
-END.  {AverageScore}
+  WRITELN ('Class average:');
+  ClassTotal := ClassTotal DIV (ClassSize * NumberOfScores);
+  WRITELN(ClassTotal DIV 10, '.', ClassTotal MOD 10:1)
+END.  {AverageScore2}
